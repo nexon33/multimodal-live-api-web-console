@@ -15,6 +15,7 @@
  */
 
 import { useRef, useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.scss";
 import { LiveAPIProvider } from "./contexts/LiveAPIContext";
 import SidePanel from "./components/side-panel/SidePanel";
@@ -22,15 +23,15 @@ import { Altair } from "./components/altair/Altair";
 import ControlTray from "./components/control-tray/ControlTray";
 import cn from "classnames";
 
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY as string;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 if (typeof API_KEY !== "string") {
-  throw new Error("set REACT_APP_GEMINI_API_KEY in .env");
+  throw new Error("set VITE_GEMINI_API_KEY in .env");
 }
 
 const host = "generativelanguage.googleapis.com";
 const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent`;
 
-function App() {
+function AppContent() {
   // this video reference is used for displaying the active stream, whether that is the webcam or screen capture
   // feel free to style as you see fit
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -44,16 +45,25 @@ function App() {
           <SidePanel />
           <main>
             <div className="main-app-area">
-              {/* APP goes here */}
-              <Altair />
-              <video
-                className={cn("stream", {
-                  hidden: !videoRef.current || !videoStream,
-                })}
-                ref={videoRef}
-                autoPlay
-                playsInline
-              />
+              <Routes>
+                {/* Add Tempo route before any other routes */}
+                {import.meta.env.VITE_TEMPO && <Route path="/tempobook/*" />}
+                
+                {/* Your app routes */}
+                <Route path="/" element={
+                  <>
+                    <Altair />
+                    <video
+                      className={cn("stream", {
+                        hidden: !videoRef.current || !videoStream,
+                      })}
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                    />
+                  </>
+                } />
+              </Routes>
             </div>
 
             <ControlTray
@@ -67,6 +77,14 @@ function App() {
         </div>
       </LiveAPIProvider>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 
